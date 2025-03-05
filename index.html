@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yanna's Financial Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f3f4f6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 80%;
+            max-width: 1200px;
+            margin: 50px auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        header h1 {
+            font-size: 2.5em;
+            color: #4CAF50;
+        }
+        header .subheading {
+            color: #888;
+            font-size: 1.1em;
+        }
+        .form-section, .search-section {
+            margin-bottom: 30px;
+        }
+        .form-section h2, .search-section h2 {
+            color: #333;
+            font-size: 1.5em;
+        }
+        input, select, button, textarea {
+            padding: 10px;
+            font-size: 1em;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            margin: 10px 0;
+            width: 100%;
+        }
+        button {
+            background-color: #4CAF50;
+            color: #fff;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .transactions-section {
+            margin-top: 40px;
+        }
+        .transaction-item {
+            background-color: #f9f9f9;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            flex-direction: column;
+        }
+        .transaction-item.income {
+            border-left: 5px solid green;
+        }
+        .transaction-item.expense {
+            border-left: 5px solid red;
+        }
+        .transaction-item p {
+            margin: 0;
+            font-size: 1.1em;
+        }
+        .transaction-item .date {
+            font-size: 0.9em;
+            color: #777;
+        }
+        .summary-section {
+            margin-top: 30px;
+            text-align: center;
+        }
+        .summary-section p {
+            font-size: 1.3em;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Yanna's Financial Tracker</h1>
+            <p class="subheading">Track your income and expenses easily.</p>
+        </header>
+
+        <!-- Form to Input Transactions -->
+        <section class="form-section">
+            <h2>Enter Transaction</h2>
+            <form id="transactionForm">
+                <label for="amount">Amount:</label>
+                <input type="number" id="amount" name="amount" required placeholder="Enter amount" />
+
+                <label for="category">Category:</label>
+                <select id="category" name="category">
+                    <option value="income">Income</option>
+                    <option value="expense">Expense</option>
+                </select>
+
+                <label for="transactionDate">Transaction Date:</label>
+                <input type="date" id="transactionDate" name="transactionDate" required />
+
+                <label for="description">Description:</label>
+                <textarea id="description" name="description" required placeholder="Enter transaction description" rows="4"></textarea>
+
+                <button type="submit">Add Transaction</button>
+            </form>
+        </section>
+
+        <!-- Search Section -->
+        <section class="search-section">
+            <h2>Search Transactions by Month</h2>
+            <form id="searchForm">
+                <label for="searchMonth">Select Month:</label>
+                <input type="month" id="searchMonth" name="searchMonth" required />
+                <button type="submit">Search</button>
+            </form>
+        </section>
+
+        <!-- Display Transactions -->
+        <section class="transactions-section">
+            <h2>Transactions</h2>
+            <div id="transactionsList"></div>
+        </section>
+
+        <!-- Summary Section -->
+        <section class="summary-section">
+            <p><strong>Total Income:</strong> ₱<span id="totalIncome">0.00</span></p>
+            <p><strong>Total Expenses:</strong> ₱<span id="totalExpenses">0.00</span></p>
+            <p><strong>Balance:</strong> ₱<span id="balance">0.00</span></p>
+        </section>
+    </div>
+
+    <script>
+        let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+
+        // Function to display transactions in the UI
+        function displayTransactions(transactionsToDisplay) {
+            const transactionsList = document.getElementById('transactionsList');
+            transactionsList.innerHTML = ''; 
+
+            if (transactionsToDisplay.length === 0) {
+                transactionsList.innerHTML = "<p>No transactions to display.</p>";
+            }
+
+            transactionsToDisplay.forEach(transaction => {
+                const transactionElement = document.createElement('div');
+                transactionElement.classList.add('transaction-item', transaction.category);
+
+                const transactionDate = new Date(transaction.date);
+                transactionElement.innerHTML = `
+                    <p><strong>Amount:</strong> ₱${transaction.amount.toFixed(2)}</p>
+                    <p><strong>Category:</strong> ${transaction.category}</p>
+                    <p><strong>Description:</strong> ${transaction.description}</p>
+                    <p class="date"><strong>Date:</strong> ${transactionDate.toLocaleDateString()}</p>
+                `;
+                transactionsList.appendChild(transactionElement);
+            });
+
+            updateSummary();
+        }
+
+        // Function to update the summary (Total Income, Expenses, Balance)
+        function updateSummary() {
+            let totalIncome = 0;
+            let totalExpenses = 0;
+
+            transactions.forEach(transaction => {
+                if (transaction.category === 'income') {
+                    totalIncome += transaction.amount;
+                } else {
+                    totalExpenses += transaction.amount;
+                }
+            });
+
+            const balance = totalIncome - totalExpenses;
+
+            document.getElementById('totalIncome').textContent = totalIncome.toFixed(2);
+            document.getElementById('totalExpenses').textContent = totalExpenses.toFixed(2);
+            document.getElementById('balance').textContent = balance.toFixed(2);
+        }
+
+        // Add new transaction to the list
+        document.getElementById('transactionForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const amount = parseFloat(document.getElementById('amount').value);
+            const category = document.getElementById('category').value;
+            const transactionDate = document.getElementById('transactionDate').value;
+            const description = document.getElementById('description').value;
+
+            if (isNaN(amount) || !transactionDate || !description) {
+                alert('Please fill in all fields.');
+                return;
+            }
+
+            const newTransaction = {
+                id: transactions.length + 1,
+                amount: amount,
+                category: category,
+                date: transactionDate,
+                description: description
+            };
+
+            transactions.push(newTransaction);
+            localStorage.setItem('transactions', JSON.stringify(transactions));
+
+            document.getElementById('transactionForm').reset();
+
+            displayTransactions(transactions);
+        });
+
+        // Search transactions by month
+        document.getElementById('searchForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const searchMonth = document.getElementById('searchMonth').value;
+            const filteredTransactions = transactions.filter(transaction => {
+                const transactionMonth = transaction.date.substring(0, 7); 
+                return transactionMonth === searchMonth; 
+            });
+
+            displayTransactions(filteredTransactions);
+        });
+
+        // Display transactions on page load
+        displayTransactions(transactions);
+    </script>
+
+</body>
+</html>
