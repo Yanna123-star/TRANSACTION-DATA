@@ -92,67 +92,178 @@
             font-size: 1.3em;
             margin-bottom: 10px;
         }
+        .deleteButton {
+            background-color: #f44336;
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .deleteButton:hover {
+            background-color: #d32f2f;
+        }
     </style>
 </head>
 <body>
 
-    <div class="container">
+    <div class="container" id="container">
         <header>
             <h1>Yanna's Financial Tracker</h1>
             <p class="subheading">Track your income and expenses easily.</p>
         </header>
 
-        <!-- Form to Input Transactions -->
-        <section class="form-section">
-            <h2>Enter Transaction</h2>
-            <form id="transactionForm">
-                <label for="amount">Amount:</label>
-                <input type="number" id="amount" name="amount" required placeholder="Enter amount" />
+        <!-- Login and Signup Section -->
+        <section id="loginSignupSection" class="login-signup-section">
+            <h2>Login</h2>
+            <form id="loginForm">
+                <label for="loginEmail">Email:</label>
+                <input type="email" id="loginEmail" name="email" required placeholder="Enter email" />
+                
+                <label for="loginPassword">Password:</label>
+                <input type="password" id="loginPassword" name="password" required placeholder="Enter password" />
 
-                <label for="category">Category:</label>
-                <select id="category" name="category">
-                    <option value="income">Income</option>
-                    <option value="expense">Expense</option>
-                </select>
-
-                <label for="transactionDate">Transaction Date:</label>
-                <input type="date" id="transactionDate" name="transactionDate" required />
-
-                <label for="description">Description:</label>
-                <textarea id="description" name="description" required placeholder="Enter transaction description" rows="4"></textarea>
-
-                <button type="submit">Add Transaction</button>
+                <button type="submit">Login</button>
+                <p>Don't have an account? <a href="#" id="goToSignup">Sign up</a></p>
             </form>
         </section>
 
-        <!-- Search Section -->
-        <section class="search-section">
-            <h2>Search Transactions by Month</h2>
-            <form id="searchForm">
-                <label for="searchMonth">Select Month:</label>
-                <input type="month" id="searchMonth" name="searchMonth" required />
-                <button type="submit">Search</button>
+        <!-- Signup Section -->
+        <section id="signupSection" class="login-signup-section" style="display: none;">
+            <h2>Sign Up</h2>
+            <form id="signupForm">
+                <label for="signupEmail">Email:</label>
+                <input type="email" id="signupEmail" name="email" required placeholder="Enter email" />
+
+                <label for="signupPassword">Password:</label>
+                <input type="password" id="signupPassword" name="password" required placeholder="Enter password" />
+
+                <button type="submit">Sign Up</button>
+                <p>Already have an account? <a href="#" id="goToLogin">Login</a></p>
             </form>
         </section>
 
-        <!-- Display Transactions -->
-        <section class="transactions-section">
-            <h2>Transactions</h2>
-            <div id="transactionsList"></div>
-        </section>
+        <!-- Main Content for Financial Tracker -->
+        <section id="mainContent" style="display: none;">
+            <!-- Form to Input Transactions -->
+            <section class="form-section">
+                <h2>Enter Transaction</h2>
+                <form id="transactionForm">
+                    <label for="amount">Amount:</label>
+                    <input type="number" id="amount" name="amount" required placeholder="Enter amount" />
 
-        <!-- Summary Section -->
-        <section class="summary-section">
-            <p><strong>Total Income:</strong> ₱<span id="totalIncome">0.00</span></p>
-            <p><strong>Total Expenses:</strong> ₱<span id="totalExpenses">0.00</span></p>
-            <p><strong>Balance:</strong> ₱<span id="balance">0.00</span></p>
+                    <label for="category">Category:</label>
+                    <select id="category" name="category">
+                        <option value="income">Income</option>
+                        <option value="expense">Expense</option>
+                    </select>
+
+                    <label for="transactionDate">Transaction Date:</label>
+                    <input type="date" id="transactionDate" name="transactionDate" required />
+
+                    <label for="description">Description:</label>
+                    <textarea id="description" name="description" required placeholder="Enter transaction description" rows="4"></textarea>
+
+                    <button type="submit">Add Transaction</button>
+                </form>
+            </section>
+
+            <!-- Search Section -->
+            <section class="search-section">
+                <h2>Search Transactions by Month</h2>
+                <form id="searchForm">
+                    <label for="searchMonth">Select Month:</label>
+                    <input type="month" id="searchMonth" name="searchMonth" required />
+                    <button type="submit">Search</button>
+                </form>
+            </section>
+
+            <!-- Display Transactions -->
+            <section class="transactions-section">
+                <h2>Transactions</h2>
+                <div id="transactionsList"></div>
+            </section>
+
+            <!-- Summary Section -->
+            <section class="summary-section">
+                <p><strong>Total Income:</strong> ₱<span id="totalIncome">0.00</span></p>
+                <p><strong>Total Expenses:</strong> ₱<span id="totalExpenses">0.00</span></p>
+                <p><strong>Balance:</strong> ₱<span id="balance">0.00</span></p>
+            </section>
         </section>
     </div>
 
     <script>
         let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+        let loggedInUser = JSON.parse(localStorage.getItem('loggedInUser')) || null;
 
-        // Function to display transactions in the UI
+        // Function to handle login
+        document.getElementById('loginForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            const user = users.find(u => u.email === email && u.password === password);
+
+            if (user) {
+                loggedInUser = user;
+                localStorage.setItem('loggedInUser', JSON.stringify(loggedInUser));
+                switchToMainContent();
+            } else {
+                alert('Invalid email or password!');
+            }
+        });
+
+        // Function to handle signup
+        document.getElementById('signupForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            const existingUser = users.find(u => u.email === email);
+
+            if (existingUser) {
+                alert('User already exists!');
+            } else {
+                const newUser = { email, password };
+                users.push(newUser);
+                localStorage.setItem('users', JSON.stringify(users));
+                alert('Account created successfully! You can now log in.');
+                switchToLogin();
+            }
+        });
+
+        // Switch to login view
+        document.getElementById('goToSignup').addEventListener('click', function() {
+            document.getElementById('loginSignupSection').style.display = 'none';
+            document.getElementById('signupSection').style.display = 'block';
+        });
+
+        // Switch to signup view
+        document.getElementById('goToLogin').addEventListener('click', function() {
+            document.getElementById('signupSection').style.display = 'none';
+            document.getElementById('loginSignupSection').style.display = 'block';
+        });
+
+        // Switch to main content
+        function switchToMainContent() {
+            document.getElementById('loginSignupSection').style.display = 'none';
+            document.getElementById('signupSection').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+            displayTransactions(transactions);
+        }
+
+        // Switch to login content
+        function switchToLogin() {
+            document.getElementById('signupSection').style.display = 'none';
+            document.getElementById('loginSignupSection').style.display = 'block';
+        }
+
+        // Display transactions in the UI
         function displayTransactions(transactionsToDisplay) {
             const transactionsList = document.getElementById('transactionsList');
             transactionsList.innerHTML = ''; 
@@ -166,16 +277,39 @@
                 transactionElement.classList.add('transaction-item', transaction.category);
 
                 const transactionDate = new Date(transaction.date);
-                transactionElement.innerHTML = `
+                transactionElement.innerHTML = ` 
                     <p><strong>Amount:</strong> ₱${transaction.amount.toFixed(2)}</p>
                     <p><strong>Category:</strong> ${transaction.category}</p>
                     <p><strong>Description:</strong> ${transaction.description}</p>
                     <p class="date"><strong>Date:</strong> ${transactionDate.toLocaleDateString()}</p>
+                    <button class="editButton">Edit</button>
+                    <button class="deleteButton">Delete</button>
                 `;
+
+                // Add the transaction element to the DOM
                 transactionsList.appendChild(transactionElement);
+
+                // Attach the click event to the edit button dynamically
+                const editButton = transactionElement.querySelector('.editButton');
+                editButton.addEventListener('click', function() {
+                    editTransaction(transaction.id);
+                });
+
+                // Attach the click event to the delete button dynamically
+                const deleteButton = transactionElement.querySelector('.deleteButton');
+                deleteButton.addEventListener('click', function() {
+                    deleteTransaction(transaction.id);
+                });
             });
 
             updateSummary();
+        }
+
+        // Function to delete a transaction
+        function deleteTransaction(transactionId) {
+            transactions = transactions.filter(t => t.id !== transactionId);
+            localStorage.setItem('transactions', JSON.stringify(transactions));
+            displayTransactions(transactions);
         }
 
         // Function to update the summary (Total Income, Expenses, Balance)
@@ -241,8 +375,51 @@
             displayTransactions(filteredTransactions);
         });
 
-        // Display transactions on page load
-        displayTransactions(transactions);
+        // Function to edit a transaction
+        function editTransaction(transactionId) {
+            const transactionToEdit = transactions.find(t => t.id === transactionId);
+            
+            if (transactionToEdit) {
+                // Populate the form with the current transaction details
+                document.getElementById('amount').value = transactionToEdit.amount;
+                document.getElementById('category').value = transactionToEdit.category;
+                document.getElementById('transactionDate').value = transactionToEdit.date;
+                document.getElementById('description').value = transactionToEdit.description;
+
+                // Change the form's submit behavior to update the transaction
+                document.getElementById('transactionForm').onsubmit = function(event) {
+                    event.preventDefault();
+
+                    const amount = parseFloat(document.getElementById('amount').value);
+                    const category = document.getElementById('category').value;
+                    const transactionDate = document.getElementById('transactionDate').value;
+                    const description = document.getElementById('description').value;
+
+                    if (isNaN(amount) || !transactionDate || !description) {
+                        alert('Please fill in all fields.');
+                        return;
+                    }
+
+                    // Update the selected transaction
+                    transactionToEdit.amount = amount;
+                    transactionToEdit.category = category;
+                    transactionToEdit.date = transactionDate;
+                    transactionToEdit.description = description;
+
+                    // Save the updated transactions to local storage
+                    localStorage.setItem('transactions', JSON.stringify(transactions));
+
+                    // Reset the form and re-display the transactions
+                    document.getElementById('transactionForm').reset();
+                    displayTransactions(transactions);
+                };
+            }
+        }
+
+        // Check if user is logged in
+        if (loggedInUser) {
+            switchToMainContent();
+        }
     </script>
 
 </body>
